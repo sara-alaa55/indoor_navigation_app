@@ -58,9 +58,12 @@ class _PracticalScreenState extends State<PracticalScreen>
       _startPosition = _lastPosition;
       _targetPosition = newTarget;
       _selectedDestination = dest;
+      _searchQuery = "";
     });
     _controller.reset();
     _controller.forward();
+    // إغلاق المنيو (Drawer) تلقائياً بعد اختيار الغرفة
+    Navigator.pop(context);
   }
 
   void _onAnimationComplete() {
@@ -98,26 +101,45 @@ class _PracticalScreenState extends State<PracticalScreen>
     final bgColor = _isDarkMode
         ? const Color(0xFF0A0A0A)
         : const Color(0xFFF5F5F5);
-    final sidebarColor = _isDarkMode
-        ? Colors.black.withOpacity(0.5)
-        : Colors.white;
     final textColor = _isDarkMode ? Colors.white : Colors.black87;
 
     return Scaffold(
       backgroundColor: bgColor,
-      body: Row(
-        children: [
-          Container(
-            width: 300,
-            color: sidebarColor,
-            child: _buildSidebar(textColor),
+      // --- إضافة الـ AppBar عشان زرار المنيو ---
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          "PRACTICAL BUILDING",
+          style: TextStyle(
+            color: const Color(0xFFFFB6C1),
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
           ),
-          Expanded(
-            child: Stack(
-              children: [_buildMapSection(), _buildFloatingButtons(context)],
+        ),
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu, color: Color(0xFFFFB6C1)),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(
+              _isDarkMode ? Icons.light_mode : Icons.dark_mode,
+              color: const Color(0xFFFFB6C1),
             ),
+            onPressed: () => setState(() => _isDarkMode = !_isDarkMode),
           ),
         ],
+      ),
+      // --- تحويل السايد بار إلى Drawer ---
+      drawer: Drawer(
+        backgroundColor: _isDarkMode ? const Color(0xFF151515) : Colors.white,
+        child: _buildSidebar(textColor),
+      ),
+      body: Stack(
+        children: [_buildMapSection(), _buildFloatingButtons(context)],
       ),
     );
   }
@@ -125,33 +147,18 @@ class _PracticalScreenState extends State<PracticalScreen>
   Widget _buildSidebar(Color textColor) {
     return Column(
       children: [
-        const SizedBox(height: 40),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                "PRACTICAL",
-                style: TextStyle(
-                  color: Color(0xFFFFB6C1),
-                  fontSize: 22,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              IconButton(
-                icon: Icon(
-                  _isDarkMode ? Icons.light_mode : Icons.dark_mode,
-                  color: const Color(0xFFFFB6C1),
-                ),
-                onPressed: () => setState(() => _isDarkMode = !_isDarkMode),
-              ),
-            ],
+        const SizedBox(height: 60),
+        const Text(
+          "NAVIGATOR",
+          style: TextStyle(
+            color: Color(0xFFFFB6C1),
+            fontSize: 24,
+            fontWeight: FontWeight.w900,
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 20),
         Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           child: TextField(
             onChanged: (v) => setState(() => _searchQuery = v.toLowerCase()),
             style: TextStyle(color: textColor),
@@ -160,7 +167,9 @@ class _PracticalScreenState extends State<PracticalScreen>
               hintStyle: TextStyle(color: textColor.withOpacity(0.4)),
               prefixIcon: const Icon(Icons.search, color: Color(0xFFFFB6C1)),
               filled: true,
-              fillColor: Colors.white.withOpacity(0.05),
+              fillColor: _isDarkMode
+                  ? Colors.white.withOpacity(0.05)
+                  : Colors.grey.withOpacity(0.1),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(15),
                 borderSide: BorderSide.none,
@@ -169,70 +178,82 @@ class _PracticalScreenState extends State<PracticalScreen>
           ),
         ),
         Expanded(
-          child: ListView(
-            padding: EdgeInsets.zero,
-            children: [
-              _buildFolder(Icons.school_outlined, "Learning Hub", [
-                "Lab 1",
-                "Lab 2",
-                "Lab 3",
-                "LAB 4",
-                "AI Lab",
-              ], textColor),
-              _buildFolder(Icons.work_outline, "Management", [
-                "COO Office",
-                "Ms. Asmaa",
-                "Mr. Salah",
-                "Data Center",
-                "Maintenance",
-                "Staff Room",
-              ], textColor),
-              _buildFolder(Icons.wc, "W.C", ["Boys WC", "Girls WC"], textColor),
-              _buildFolder(Icons.more_horiz, "Others", [
-                "Entrance",
-                "Emergency Exit",
-                "Cafeteria",
-                "Reception",
-              ], textColor),
-              const SizedBox(height: 20),
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 10,
+          child: _searchQuery.isNotEmpty
+              ? _buildSearchListView(textColor)
+              : ListView(
+                  padding: EdgeInsets.zero,
+                  children: [
+                    _buildFolder(Icons.school_outlined, "Learning Hub", [
+                      "Lab 1",
+                      "Lab 2",
+                      "Lab 3",
+                      "LAB 4",
+                      "AI Lab",
+                    ], textColor),
+                    _buildFolder(Icons.work_outline, "Management", [
+                      "COO Office",
+                      "Ms. Asmaa",
+                      "Mr. Salah",
+                      "Data Center",
+                      "Maintenance",
+                      "Staff Room",
+                    ], textColor),
+                    _buildFolder(Icons.wc, "W.C", [
+                      "Boys WC",
+                      "Girls WC",
+                    ], textColor),
+                    _buildFolder(Icons.more_horiz, "Others", [
+                      "Entrance",
+                      "Emergency Exit",
+                      "Cafeteria",
+                      "Reception",
+                    ], textColor),
+                  ],
                 ),
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const WelcomeScreen(),
-                      ),
-                      (route) => false,
-                    );
-                  },
-                  icon: const Icon(Icons.arrow_back, color: Colors.black),
-                  label: const Text(
-                    "BACK",
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFFB6C1),
-                    minimumSize: const Size(double.infinity, 50),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(20),
+          child: ElevatedButton.icon(
+            onPressed: () => Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+              (route) => false,
+            ),
+            icon: const Icon(Icons.arrow_back, color: Colors.black),
+            label: const Text(
+              "BACK",
+              style: TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
               ),
-              const SizedBox(height: 30),
-            ],
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFFFB6C1),
+              minimumSize: const Size(double.infinity, 50),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildSearchListView(Color textColor) {
+    final results = _locations.keys
+        .where((element) => element.toLowerCase().contains(_searchQuery))
+        .toList();
+    return ListView.builder(
+      itemCount: results.length,
+      itemBuilder: (context, index) => ListTile(
+        leading: const Icon(
+          Icons.location_on_outlined,
+          color: Color(0xFFFFB6C1),
+        ),
+        title: Text(results[index], style: TextStyle(color: textColor)),
+        onTap: () => _updatePath(results[index]),
+      ),
     );
   }
 
@@ -242,12 +263,6 @@ class _PracticalScreenState extends State<PracticalScreen>
     List<String> items,
     Color txtColor,
   ) {
-    List<String> filtered = items
-        .where((i) => i.toLowerCase().contains(_searchQuery))
-        .toList();
-    if (filtered.isEmpty && _searchQuery.isNotEmpty)
-      return const SizedBox.shrink();
-
     return ExpansionTile(
       leading: Icon(icon, color: const Color(0xFFFFB6C1)),
       title: Text(
@@ -256,7 +271,7 @@ class _PracticalScreenState extends State<PracticalScreen>
       ),
       iconColor: const Color(0xFFFFB6C1),
       collapsedIconColor: const Color(0xFFFFB6C1),
-      children: filtered
+      children: items
           .map(
             (item) => ListTile(
               contentPadding: const EdgeInsets.only(left: 70),
@@ -277,9 +292,8 @@ class _PracticalScreenState extends State<PracticalScreen>
 
   Widget _buildMapSection() {
     int steps = _calculateStepsBetween(_startPosition, _targetPosition);
-
     return Container(
-      margin: const EdgeInsets.all(20),
+      margin: const EdgeInsets.fromLTRB(10, 0, 10, 20),
       decoration: BoxDecoration(
         color: _isDarkMode ? const Color(0xFF151515) : Colors.white,
         borderRadius: BorderRadius.circular(30),
@@ -287,29 +301,23 @@ class _PracticalScreenState extends State<PracticalScreen>
       child: ClipRRect(
         borderRadius: BorderRadius.circular(30),
         child: LayoutBuilder(
-          builder: (context, constraints) {
-            return InteractiveViewer(
-              minScale: 0.5,
-              maxScale: 3.0,
-              child: SizedBox(
-                width: constraints.maxWidth,
-                height: constraints.maxHeight,
-                child: AnimatedBuilder(
-                  animation: _animation,
-                  builder: (context, child) => CustomPaint(
-                    size: Size(constraints.maxWidth, constraints.maxHeight),
-                    painter: SmartNeonPainter(
-                      progress: _animation.value,
-                      startNode: _startPosition,
-                      targetNode: _targetPosition,
-                      isDarkMode: _isDarkMode,
-                      stepCount: steps.toString(),
-                    ),
-                  ),
+          builder: (context, constraints) => InteractiveViewer(
+            minScale: 0.5,
+            maxScale: 4.0,
+            child: AnimatedBuilder(
+              animation: _animation,
+              builder: (context, child) => CustomPaint(
+                size: Size(constraints.maxWidth, constraints.maxHeight),
+                painter: SmartNeonPainter(
+                  progress: _animation.value,
+                  startNode: _startPosition,
+                  targetNode: _targetPosition,
+                  isDarkMode: _isDarkMode,
+                  stepCount: steps.toString(),
                 ),
               ),
-            );
-          },
+            ),
+          ),
         ),
       ),
     );
@@ -317,8 +325,8 @@ class _PracticalScreenState extends State<PracticalScreen>
 
   Widget _buildFloatingButtons(BuildContext context) {
     return Positioned(
-      bottom: 30,
-      right: 30,
+      bottom: 20,
+      right: 20,
       child: Column(
         children: [
           FloatingActionButton.extended(
@@ -332,13 +340,15 @@ class _PracticalScreenState extends State<PracticalScreen>
               style: TextStyle(
                 color: Colors.black,
                 fontWeight: FontWeight.bold,
+                fontSize: 12,
               ),
             ),
-            icon: const Icon(Icons.apartment, color: Colors.black),
+            icon: const Icon(Icons.apartment, color: Colors.black, size: 18),
             backgroundColor: const Color(0xFFFFB6C1),
           ),
-          const SizedBox(height: 15),
+          const SizedBox(height: 10),
           FloatingActionButton(
+            mini: true,
             heroTag: "qr_btn",
             onPressed: () async {
               final res = await Navigator.push(
@@ -347,12 +357,14 @@ class _PracticalScreenState extends State<PracticalScreen>
                   builder: (context) => const QRScannerScreen(),
                 ),
               );
-              if (res != null && _locations.containsKey(res)) {
-                _updatePath(res);
-              }
+              if (res != null && _locations.containsKey(res)) _updatePath(res);
             },
             backgroundColor: const Color(0xFFFFB6C1),
-            child: const Icon(Icons.qr_code_scanner, color: Colors.black),
+            child: const Icon(
+              Icons.qr_code_scanner,
+              color: Colors.black,
+              size: 20,
+            ),
           ),
         ],
       ),
@@ -380,109 +392,57 @@ class SmartNeonPainter extends CustomPainter {
     final w = size.width;
     final h = size.height;
     final pinkNeon = const Color(0xFFFFB6C1);
-
     final corridorPaint = Paint()
       ..color = isDarkMode
           ? Colors.white.withOpacity(0.05)
           : Colors.grey.withOpacity(0.1);
 
-    // الممر الطولي الرئيسي (اللي في النص)
     canvas.drawRect(
       Rect.fromLTWH(w * 0.46, h * 0.05, w * 0.08, h * 0.9),
       corridorPaint,
     );
-
-    // الممر العرضي (اللي يربط كل حاجة)
     canvas.drawRect(
       Rect.fromLTWH(w * 0.1, h * 0.42, w * 0.85, h * 0.08),
       corridorPaint,
     );
-
-    // الممر الأيسر (اللي بيودي لـ Lab 4 و Lab 3 و Staff Room)
     canvas.drawRect(
       Rect.fromLTWH(w * 0.1, h * 0.05, w * 0.08, h * 0.37),
       corridorPaint,
     );
 
-    // 🔥 تم إزالة الممر الأيمن (اللي كان بيودي لـ Lab 1)
-
     _drawStaticRooms(canvas, size);
 
     final path = Path();
-
-    double sX = startNode.dx * w;
-    double sY = startNode.dy * h;
-    double tX = targetNode.dx * w;
-    double tY = targetNode.dy * h;
-
-    double centerMainX = w * 0.5;
-    double centerHorY = h * 0.46;
-    double centerLeftX = w * 0.14;
-    double centerRightX = w * 0.94;
-
-    path.moveTo(sX, sY);
-
-    // التحرك من البداية لنص الممر العرضي
-    if (sX < w * 0.2) {
-      // لو البداية في الممر الأيسر
-      path.lineTo(centerLeftX, sY);
-      path.lineTo(centerLeftX, centerHorY);
-    } else if (sX > w * 0.85) {
-      // لو البداية في الممر الأيمن
-      path.lineTo(centerRightX, sY);
-      path.lineTo(centerRightX, centerHorY);
-    } else {
-      // لو البداية في أي مكان تاني
-      path.lineTo(sX, centerHorY);
-    }
-
-    // التحرك من الممر العرضي للهدف
-    if (tX < w * 0.2) {
-      // لو الهدف في الممر الأيسر
-      path.lineTo(centerLeftX, centerHorY);
-      path.lineTo(centerLeftX, tY);
-    } else if (tX > w * 0.85) {
-      // لو الهدف في الممر الأيمن
-      path.lineTo(centerRightX, centerHorY);
-      path.lineTo(centerRightX, tY);
-    } else {
-      // لو الهدف في أي مكان تاني
-      path.lineTo(tX, centerHorY);
-    }
-
-    // النزول للهدف
-    path.lineTo(tX, tY);
+    path.moveTo(startNode.dx * w, startNode.dy * h);
+    path.lineTo(startNode.dx * w, h * 0.46);
+    path.lineTo(targetNode.dx * w, h * 0.46);
+    path.lineTo(targetNode.dx * w, targetNode.dy * h);
 
     final metrics = path.computeMetrics().toList();
     if (metrics.isNotEmpty) {
       final metric = metrics.first;
       final currentPath = metric.extractPath(0, metric.length * progress);
-
       canvas.drawPath(
         currentPath,
         Paint()
           ..color = pinkNeon.withOpacity(0.3)
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 10
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
+          ..strokeWidth = 8
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
       );
-
       canvas.drawPath(
         currentPath,
         Paint()
           ..color = pinkNeon
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 3
+          ..strokeWidth = 2
           ..strokeCap = StrokeCap.round,
       );
 
       final tangent = metric.getTangentForOffset(metric.length * progress);
       if (tangent != null) {
         _drawPersonMarker(canvas, tangent.position, pinkNeon);
-        int steps = 0;
-        if (stepCount.isNotEmpty) {
-          steps = (int.parse(stepCount) * progress).toInt();
-        }
+        int steps = (int.parse(stepCount) * progress).toInt();
         _drawStepBubble(canvas, tangent.position, steps);
       }
     }
@@ -503,16 +463,28 @@ class SmartNeonPainter extends CustomPainter {
       Color color,
     ) {
       final rect = Rect.fromLTWH(x * w, y * h, width * w, height * h);
+      final paint = Paint()
+        ..shader = ui.Gradient.linear(rect.topLeft, rect.bottomRight, [
+          color.withOpacity(0.8),
+          color.withOpacity(0.3),
+        ]);
       canvas.drawRRect(
         RRect.fromRectAndRadius(rect, const Radius.circular(8)),
-        Paint()..color = color.withOpacity(0.6),
+        paint,
+      );
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(rect, const Radius.circular(8)),
+        Paint()
+          ..color = color.withOpacity(0.4)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 0.5,
       );
       final tp = TextPainter(
         text: TextSpan(
           text: label,
           style: const TextStyle(
             color: Colors.white,
-            fontSize: 7,
+            fontSize: 6,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -546,18 +518,25 @@ class SmartNeonPainter extends CustomPainter {
   }
 
   void _drawPersonMarker(Canvas canvas, Offset pos, Color color) {
-    canvas.drawCircle(pos, 12, Paint()..color = color);
+    canvas.drawCircle(
+      pos,
+      10,
+      Paint()
+        ..color = color.withOpacity(0.3)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+    );
+    canvas.drawCircle(pos, 8, Paint()..color = color);
     final tp = TextPainter(
-      text: const TextSpan(text: '🚶', style: TextStyle(fontSize: 14)),
+      text: const TextSpan(text: '🚶', style: TextStyle(fontSize: 10)),
       textDirection: TextDirection.ltr,
     )..layout();
     tp.paint(canvas, pos - Offset(tp.width / 2, tp.height / 2));
   }
 
   void _drawStepBubble(Canvas canvas, Offset pos, int steps) {
-    final rect = Rect.fromLTWH(pos.dx - 30, pos.dy - 55, 60, 30);
+    final rect = Rect.fromLTWH(pos.dx - 25, pos.dy - 40, 50, 20);
     canvas.drawRRect(
-      RRect.fromRectAndRadius(rect, const Radius.circular(10)),
+      RRect.fromRectAndRadius(rect, const Radius.circular(6)),
       Paint()..color = const Color(0xFFFFB6C1),
     );
     final tp = TextPainter(
@@ -566,7 +545,7 @@ class SmartNeonPainter extends CustomPainter {
         style: const TextStyle(
           color: Colors.black,
           fontWeight: FontWeight.bold,
-          fontSize: 10,
+          fontSize: 8,
         ),
       ),
       textDirection: TextDirection.ltr,
