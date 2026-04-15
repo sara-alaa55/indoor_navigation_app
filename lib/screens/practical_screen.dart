@@ -62,7 +62,6 @@ class _PracticalScreenState extends State<PracticalScreen>
     });
     _controller.reset();
     _controller.forward();
-    // إغلاق المنيو (Drawer) تلقائياً بعد اختيار الغرفة
     Navigator.pop(context);
   }
 
@@ -105,7 +104,6 @@ class _PracticalScreenState extends State<PracticalScreen>
 
     return Scaffold(
       backgroundColor: bgColor,
-      // --- إضافة الـ AppBar عشان زرار المنيو ---
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -133,14 +131,11 @@ class _PracticalScreenState extends State<PracticalScreen>
           ),
         ],
       ),
-      // --- تحويل السايد بار إلى Drawer ---
       drawer: Drawer(
         backgroundColor: _isDarkMode ? const Color(0xFF151515) : Colors.white,
         child: _buildSidebar(textColor),
       ),
-      body: Stack(
-        children: [_buildMapSection(), _buildFloatingButtons(context)],
-      ),
+      body: _buildMapSection(),
     );
   }
 
@@ -293,81 +288,93 @@ class _PracticalScreenState extends State<PracticalScreen>
   Widget _buildMapSection() {
     int steps = _calculateStepsBetween(_startPosition, _targetPosition);
 
-    // 🔥 خدي حجم الشاشة كاملاً
-    final screenHeight = MediaQuery.of(context).size.height;
+    // 🔥 المفتاح السحري: خد حجم الشاشة بالكامل
     final screenWidth = MediaQuery.of(context).size.width;
-    final appBarHeight = kToolbarHeight; // 56
+    final screenHeight = MediaQuery.of(context).size.height;
+    final appBarHeight = kToolbarHeight;
     final availableHeight = screenHeight - appBarHeight;
 
     return SizedBox(
       width: screenWidth,
       height: availableHeight,
-      child: Container(
-        decoration: BoxDecoration(
-          color: _isDarkMode ? const Color(0xFF151515) : Colors.white,
-        ),
-        child: InteractiveViewer(
-          minScale: 0.5,
-          maxScale: 5.0,
-          child: AnimatedBuilder(
-            animation: _animation,
-            builder: (context, child) => CustomPaint(
-              size: Size(screenWidth, availableHeight),
-              painter: SmartNeonPainter(
-                progress: _animation.value,
-                startNode: _startPosition,
-                targetNode: _targetPosition,
-                isDarkMode: _isDarkMode,
-                stepCount: steps.toString(),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFloatingButtons(BuildContext context) {
-    return Positioned(
-      bottom: 20,
-      right: 20,
-      child: Column(
+      child: Stack(
         children: [
-          FloatingActionButton.extended(
-            heroTag: "theory_btn",
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const TheoryScreen()),
+          // الخريطة
+          Container(
+            width: screenWidth,
+            height: availableHeight,
+            decoration: BoxDecoration(
+              color: _isDarkMode ? const Color(0xFF151515) : Colors.white,
             ),
-            label: const Text(
-              "Theory",
-              style: TextStyle(
-                color: Colors.black,
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
+            child: InteractiveViewer(
+              minScale: 0.5,
+              maxScale: 4.0,
+              child: AnimatedBuilder(
+                animation: _animation,
+                builder: (context, child) => CustomPaint(
+                  size: Size(screenWidth, availableHeight),
+                  painter: SmartNeonPainter(
+                    progress: _animation.value,
+                    startNode: _startPosition,
+                    targetNode: _targetPosition,
+                    isDarkMode: _isDarkMode,
+                    stepCount: steps.toString(),
+                  ),
+                ),
               ),
             ),
-            icon: const Icon(Icons.apartment, color: Colors.black, size: 18),
-            backgroundColor: const Color(0xFFFFB6C1),
           ),
-          const SizedBox(height: 10),
-          FloatingActionButton(
-            mini: true,
-            heroTag: "qr_btn",
-            onPressed: () async {
-              final res = await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const QRScannerScreen(),
+          // الأزرار العائمة
+          Positioned(
+            bottom: 20,
+            right: 20,
+            child: Column(
+              children: [
+                FloatingActionButton.extended(
+                  heroTag: "theory_btn",
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const TheoryScreen(),
+                    ),
+                  ),
+                  label: const Text(
+                    "Theory",
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                  icon: const Icon(
+                    Icons.apartment,
+                    color: Colors.black,
+                    size: 18,
+                  ),
+                  backgroundColor: const Color(0xFFFFB6C1),
                 ),
-              );
-              if (res != null && _locations.containsKey(res)) _updatePath(res);
-            },
-            backgroundColor: const Color(0xFFFFB6C1),
-            child: const Icon(
-              Icons.qr_code_scanner,
-              color: Colors.black,
-              size: 20,
+                const SizedBox(height: 10),
+                FloatingActionButton(
+                  mini: true,
+                  heroTag: "qr_btn",
+                  onPressed: () async {
+                    final res = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const QRScannerScreen(),
+                      ),
+                    );
+                    if (res != null && _locations.containsKey(res))
+                      _updatePath(res);
+                  },
+                  backgroundColor: const Color(0xFFFFB6C1),
+                  child: const Icon(
+                    Icons.qr_code_scanner,
+                    color: Colors.black,
+                    size: 20,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -400,6 +407,8 @@ class SmartNeonPainter extends CustomPainter {
       ..color = isDarkMode
           ? Colors.white.withOpacity(0.05)
           : Colors.grey.withOpacity(0.1);
+
+    if (w <= 0 || h <= 0) return;
 
     canvas.drawRect(
       Rect.fromLTWH(w * 0.46, h * 0.05, w * 0.08, h * 0.9),
@@ -446,7 +455,10 @@ class SmartNeonPainter extends CustomPainter {
       final tangent = metric.getTangentForOffset(metric.length * progress);
       if (tangent != null) {
         _drawPersonMarker(canvas, tangent.position, pinkNeon);
-        int steps = (int.parse(stepCount) * progress).toInt();
+        int steps = 0;
+        if (stepCount.isNotEmpty) {
+          steps = (int.parse(stepCount) * progress).toInt();
+        }
         _drawStepBubble(canvas, tangent.position, steps);
       }
     }
