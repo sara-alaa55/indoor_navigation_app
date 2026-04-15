@@ -292,29 +292,33 @@ class _PracticalScreenState extends State<PracticalScreen>
 
   Widget _buildMapSection() {
     int steps = _calculateStepsBetween(_startPosition, _targetPosition);
-    return Container(
-      margin: const EdgeInsets.fromLTRB(10, 0, 10, 20),
-      decoration: BoxDecoration(
-        color: _isDarkMode ? const Color(0xFF151515) : Colors.white,
-        borderRadius: BorderRadius.circular(30),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(30),
-        child: LayoutBuilder(
-          builder: (context, constraints) => InteractiveViewer(
-            minScale: 0.5,
-            maxScale: 4.0,
-            child: AnimatedBuilder(
-              animation: _animation,
-              builder: (context, child) => CustomPaint(
-                size: Size(constraints.maxWidth, constraints.maxHeight),
-                painter: SmartNeonPainter(
-                  progress: _animation.value,
-                  startNode: _startPosition,
-                  targetNode: _targetPosition,
-                  isDarkMode: _isDarkMode,
-                  stepCount: steps.toString(),
-                ),
+
+    // 🔥 خدي حجم الشاشة كاملاً
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final appBarHeight = kToolbarHeight; // 56
+    final availableHeight = screenHeight - appBarHeight;
+
+    return SizedBox(
+      width: screenWidth,
+      height: availableHeight,
+      child: Container(
+        decoration: BoxDecoration(
+          color: _isDarkMode ? const Color(0xFF151515) : Colors.white,
+        ),
+        child: InteractiveViewer(
+          minScale: 0.5,
+          maxScale: 5.0,
+          child: AnimatedBuilder(
+            animation: _animation,
+            builder: (context, child) => CustomPaint(
+              size: Size(screenWidth, availableHeight),
+              painter: SmartNeonPainter(
+                progress: _animation.value,
+                startNode: _startPosition,
+                targetNode: _targetPosition,
+                isDarkMode: _isDarkMode,
+                stepCount: steps.toString(),
               ),
             ),
           ),
