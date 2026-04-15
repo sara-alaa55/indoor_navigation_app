@@ -115,11 +115,12 @@ class _PracticalScreenState extends State<PracticalScreen>
             fontWeight: FontWeight.bold,
           ),
         ),
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu, color: Color(0xFFFFB6C1)),
-            onPressed: () => Scaffold.of(context).openDrawer(),
-          ),
+        leading: IconButton(
+          // 🔥 من غير Builder
+          icon: const Icon(Icons.menu, color: Color(0xFFFFB6C1)),
+          onPressed: () {
+            Scaffold.of(context).openDrawer(); // 🔥 فتح المنيو مباشرة
+          },
         ),
         actions: [
           IconButton(
