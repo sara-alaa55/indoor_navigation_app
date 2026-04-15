@@ -98,75 +98,50 @@ class _PracticalScreenState extends State<PracticalScreen>
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 800; // لو أقل من 800 = موبايل
-
     final bgColor = _isDarkMode
         ? const Color(0xFF0A0A0A)
         : const Color(0xFFF5F5F5);
-    final sidebarColor = _isDarkMode ? const Color(0xFF151515) : Colors.white;
     final textColor = _isDarkMode ? Colors.white : Colors.black87;
 
-    // 🔥 لو موبايل: استخدم AppBar + Drawer
-    if (isMobile) {
-      return Scaffold(
-        backgroundColor: bgColor,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          title: Text(
-            "PRACTICAL BUILDING",
-            style: TextStyle(
+    return Scaffold(
+      backgroundColor: bgColor,
+      // --- إضافة الـ AppBar عشان زرار المنيو ---
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          "PRACTICAL BUILDING",
+          style: TextStyle(
+            color: const Color(0xFFFFB6C1),
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu, color: Color(0xFFFFB6C1)),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(
+              _isDarkMode ? Icons.light_mode : Icons.dark_mode,
               color: const Color(0xFFFFB6C1),
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
             ),
+            onPressed: () => setState(() => _isDarkMode = !_isDarkMode),
           ),
-          leading: Builder(
-            builder: (context) => IconButton(
-              icon: const Icon(Icons.menu, color: Color(0xFFFFB6C1)),
-              onPressed: () => Scaffold.of(context).openDrawer(),
-            ),
-          ),
-          actions: [
-            IconButton(
-              icon: Icon(
-                _isDarkMode ? Icons.light_mode : Icons.dark_mode,
-                color: const Color(0xFFFFB6C1),
-              ),
-              onPressed: () => setState(() => _isDarkMode = !_isDarkMode),
-            ),
-          ],
-        ),
-        drawer: Drawer(
-          backgroundColor: sidebarColor,
-          child: _buildSidebar(textColor),
-        ),
-        body: Stack(
-          children: [_buildMapSection(), _buildFloatingButtons(context)],
-        ),
-      );
-    }
-    // 🔥 لو لاب توب: استخدم سايد بار ثابت
-    else {
-      return Scaffold(
-        backgroundColor: bgColor,
-        body: Row(
-          children: [
-            Container(
-              width: 280,
-              color: sidebarColor,
-              child: _buildSidebar(textColor),
-            ),
-            Expanded(
-              child: Stack(
-                children: [_buildMapSection(), _buildFloatingButtons(context)],
-              ),
-            ),
-          ],
-        ),
-      );
-    }
+        ],
+      ),
+      // --- تحويل السايد بار إلى Drawer ---
+      drawer: Drawer(
+        backgroundColor: _isDarkMode ? const Color(0xFF151515) : Colors.white,
+        child: _buildSidebar(textColor),
+      ),
+      body: Stack(
+        children: [_buildMapSection(), _buildFloatingButtons(context)],
+      ),
+    );
   }
 
   Widget _buildSidebar(Color textColor) {
