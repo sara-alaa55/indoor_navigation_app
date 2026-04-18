@@ -25795,7 +25795,7 @@ $S:2}
 A.anv.prototype={
 $1(a){var s=A.cZ().b
 s=s==null?null:s.canvasKitBaseUrl
-return(s==null?"https://unpkg.com/canvaskit-wasm@0.33.0/bin/":s)+a},
+return(s==null?"https://www.gstatic.com/flutter-canvaskit/e4b8dca3f1b4ede4c30371002441c88c12187ed6/":s)+a},
 $S:134}
 A.GZ.prototype={
 Uz(){var s=this.a9p(),r=$.b0.bx().ImageFilter.MakeColorFilter(s,null)
