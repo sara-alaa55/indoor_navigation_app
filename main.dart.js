@@ -83352,7 +83352,7 @@ j=a1*0.46
 i=a0*0.14
 o.a8(new A.d3(n,m))
 a2=b.r
-if(a2==="Cafeteria"){a2=l+-75
+if(a2==="Cafeteria"){a2=l+0
 o.a8(new A.bc(a2,m))
 o.a8(new A.bc(a2,k))}else if(a2==="COO Office"){o.a8(new A.bc(n,j))
 o.a8(new A.bc(i,j))
